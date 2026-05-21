@@ -2001,17 +2001,37 @@ body.theme-white .dropdown-menu {
         left: 0;
     }
 
-    .main-content {
-        margin-left: 0;
-        padding: 1.5rem;
-        padding-top: 5rem;
+    header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
 
-    header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+    header h1 {
+        font-size: 1.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    .user-profile {
+        padding: 0.4rem 0.8rem;
+        gap: 0.5rem;
+    }
+
+    .user-profile span {
+        display: none; /* Hide name on mobile to save space */
+    }
+
+    .user-profile img {
+        width: 32px;
+        height: 32px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 4.5rem;
     }
 
     .stats-grid {
@@ -2025,33 +2045,104 @@ body.theme-white .dropdown-menu {
     }
 
     .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -1rem;
-        padding: 0 1rem;
-        border-radius: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+        margin: 0;
+        padding: 0;
     }
 
-    table {
-        min-width: 600px;
+    table, thead, tbody, th, td, tr {
+        display: block;
     }
 
-    .aesthetic-bot {
-        top: 1rem;
-        right: 1rem;
-        transform: none;
-        scale: 0.8;
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
     }
 
-    .bot-bubble {
-        max-width: 150px;
-        white-space: normal;
+    tr {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        box-shadow: var(--shadow);
+    }
+
+    td {
+        border: none;
+        padding: 0.5rem 0;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: 700;
+        color: var(--neon-blue);
+        text-transform: uppercase;
         font-size: 0.7rem;
     }
 
+    td:last-child {
+        border-top: 1px solid var(--border-color);
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+    }
+
     .lock-card {
-        padding: 2.5rem 1.5rem;
+        padding: 2rem 1.25rem;
         width: 95%;
+        border-radius: 1.5rem;
+    }
+
+    .lock-logo h2 {
+        font-size: 1.25rem;
+    }
+
+    .lock-logo .logo-img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-submit {
+        padding: 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .aesthetic-bot {
+        top: auto;
+        bottom: 1rem;
+        right: 1rem;
+        transform: none;
+        scale: 0.7;
+    }
+
+    .bot-bubble {
+        bottom: 60px;
+        top: auto;
+        max-width: 120px;
+        white-space: normal;
+        font-size: 0.65rem;
     }
 
     .modal-content {
@@ -2070,12 +2161,49 @@ body.theme-white .dropdown-menu {
         max-width: 90%;
     }
 
+    .nav-links li {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .btn-primary {
+        padding: 0.8rem 1.25rem;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .message-input-area {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+
+    .message-input-area textarea {
+        height: 50px;
+    }
+
     .sidebar-widgets {
         display: none; /* Hide widgets on mobile to keep sidebar clean */
+    }
+
+    /* Performance Optimizations for Mobile */
+    body::after {
+        display: none; /* Disable 3D grid on mobile */
+    }
+
+    .cube-container {
+        display: none; /* Disable 3D cubes on mobile */
+    }
+
+    .blob {
+        opacity: 0.1; /* Lower opacity of blobs */
+        filter: blur(50px);
+    }
+
+    .video-bg {
+        opacity: 0.4; /* Lower opacity of video to reduce visual noise */
     }
 
     .logo {
         margin-bottom: 2rem;
     }
 }
-    

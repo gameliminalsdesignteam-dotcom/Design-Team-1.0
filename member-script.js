@@ -142,33 +142,7 @@ const registerForm = document.getElementById('member-register-form');
 const authTitle = document.getElementById('auth-title');
 
 // Initialization
-let deferredPrompt;
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Handle PWA Installation
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const installBtn = document.getElementById('member-install-app-btn');
-        if (installBtn) installBtn.style.display = 'block';
-    });
-
-    const installBtn = document.getElementById('member-install-app-btn');
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            installBtn.style.display = 'none';
-        });
-    }
-
-    window.addEventListener('appinstalled', () => {
-        deferredPrompt = null;
-        if (installBtn) installBtn.style.display = 'none';
-    });
-
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
@@ -670,14 +644,14 @@ function renderMyTasks() {
             `<div style="color: var(--danger); font-size: 0.75rem; margin-top: 5px;">Reason: ${task.rejectionReason || 'N/A'}</div>` : '';
 
         tr.innerHTML = `
-            <td>
+            <td data-label="Task Title">
                 ${task.title}
                 ${rejectionNote}
             </td>
-            <td><span class="badge badge-${task.priority.toLowerCase()}">${task.priority}</span></td>
-            <td><span class="status-${statusBadgeClass}">${task.status === 'Completed' ? 'Reviewing' : task.status}</span></td>
-            <td>${task.date}</td>
-            <td>
+            <td data-label="Priority"><span class="badge badge-${task.priority.toLowerCase()}">${task.priority}</span></td>
+            <td data-label="Status"><span class="status-${statusBadgeClass}">${task.status === 'Completed' ? 'Reviewing' : task.status}</span></td>
+            <td data-label="Due Date">${task.date}</td>
+            <td data-label="Action">
                 ${task.status === 'Pending' || task.status === 'Rejected' ? 
                     `<button class="btn-primary" onclick="window.location.hash='#submit-project'">Resubmit</button>` : 
                     `<span style="color: var(--text-light); font-size: 0.875rem;">Locked</span>`}

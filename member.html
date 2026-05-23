@@ -13,6 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
@@ -94,7 +95,24 @@
 
     <!-- Loading Screen -->
     <div id="loading-screen">
-        <div class="loader"></div>
+        <div class="loader-container">
+            <div class="loader-scenery">
+                <div class="scenery-item tree item-1"></div>
+                <div class="scenery-item tree-large item-2"></div>
+                <div class="scenery-item bush item-3"></div>
+                <div class="scenery-item tree item-4"></div>
+                <div class="scenery-item bush item-5"></div>
+            </div>
+            <div class="running-man">
+                <div class="head"></div>
+                <div class="torso"></div>
+                <div class="arm left"></div>
+                <div class="arm right"></div>
+                <div class="leg left"></div>
+                <div class="leg right"></div>
+            </div>
+            <div class="loader-floor"></div>
+        </div>
         <p>GAMELIMINALS</p>
     </div>
 
@@ -194,16 +212,16 @@
                     <span id="member-display-name">Team</span>
                     <img id="member-display-avatar" src="" alt="Member">
                     <div class="dropdown-menu">
-                        <div class="theme-selector" style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <label style="font-size: 0.75rem; color: var(--text-light); display: block; margin-bottom: 0.25rem;">Theme</label>
-                            <select id="member-theme-select" style="width: 100%; font-size: 0.8rem; padding: 0.4rem;">
-                                <option value="default">Cyber Dark</option>
-                                <option value="white">Minimal White</option>
-                                <option value="black">Deep Black</option>
-                            </select>
+                            <div class="theme-selector" style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                                <label style="font-size: 0.75rem; color: var(--text-light); display: block; margin-bottom: 0.25rem;">Theme</label>
+                                <select id="member-theme-select" style="width: 100%; font-size: 0.8rem; padding: 0.4rem;">
+                                    <option value="default">Cyber Dark</option>
+                                    <option value="white">Minimal White</option>
+                                    <option value="black">Deep Black</option>
+                                </select>
+                            </div>
+                            <button id="member-logout-btn" class="btn-hollow" style="border-color: var(--danger); color: var(--danger); width: 100%; justify-content: center;"><i class="fas fa-sign-out-alt"></i> Logout</button>
                         </div>
-                        <button id="member-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                    </div>
                 </div>
             </header>
 

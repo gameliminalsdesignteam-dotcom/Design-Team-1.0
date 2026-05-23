@@ -55,6 +55,26 @@ function speak(text) {
     }
 }
 
+// Loading Screen Controller
+function triggerLoading(duration = 1500, callback = null) {
+    const loader = document.getElementById('loading-screen');
+    if (!loader) return;
+
+    // Reset state
+    loader.style.display = 'flex';
+    loader.classList.remove('fade-out');
+    document.body.classList.remove('loaded');
+
+    setTimeout(() => {
+        loader.classList.add('fade-out');
+        document.body.classList.add('loaded');
+        if (callback) callback();
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 1000); // Wait for fade-out transition
+    }, duration);
+}
+
 // Shared Data Logic
 let members = [];
 let pendingRequests = [];
@@ -76,6 +96,7 @@ let siteSettings = {
     adminPassword: 'Admin123'
 };
 let currentMember = JSON.parse(sessionStorage.getItem('currentMember')) || null;
+let previousTasksState = null;
 
 // Firebase Real-time Sync
 function setupFirebaseSync() {
@@ -118,7 +139,23 @@ function setupFirebaseSync() {
 
     onValue(tasksRef, (snapshot) => {
         const data = snapshot.val();
-        tasks = data ? Object.values(data) : [];
+        const newTasks = data ? Object.values(data) : [];
+        
+        // Detect newly approved tasks for the current member
+        if (currentMember && previousTasksState !== null) {
+            newTasks.forEach(task => {
+                if (task.assigneeId === currentMember.id && task.status === 'Approved') {
+                    const prevTask = previousTasksState.find(t => t.id === task.id);
+                    // Trigger if the task was previously NOT approved (or didn't exist)
+                    if (!prevTask || prevTask.status !== 'Approved') {
+                        triggerCelebration(task.title);
+                    }
+                }
+            });
+        }
+
+        tasks = newTasks;
+        previousTasksState = JSON.parse(JSON.stringify(tasks)); // Deep copy for next comparison
         if (currentMember) updateUI();
     });
 
@@ -134,6 +171,35 @@ function setupFirebaseSync() {
     });
 }
 
+function triggerCelebration(taskTitle) {
+    if (!currentMember) return;
+
+    // 1. Party Popper Animation (Confetti)
+    if (window.confetti) {
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            // since particles fall down, start a bit higher than random
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+    }
+
+    // 2. Bot Voice Message
+    speak(`Congrats ${currentMember.name}! Your task "${taskTitle}" has been approved... great job!!`);
+}
+
 // DOM Elements
 const authScreen = document.getElementById('member-auth-screen');
 const dashboard = document.getElementById('member-dashboard');
@@ -142,33 +208,7 @@ const registerForm = document.getElementById('member-register-form');
 const authTitle = document.getElementById('auth-title');
 
 // Initialization
-let deferredPrompt;
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Handle PWA Installation
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const installBtn = document.getElementById('member-install-app-btn');
-        if (installBtn) installBtn.style.display = 'block';
-    });
-
-    const installBtn = document.getElementById('member-install-app-btn');
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            installBtn.style.display = 'none';
-        });
-    }
-
-    window.addEventListener('appinstalled', () => {
-        deferredPrompt = null;
-        if (installBtn) installBtn.style.display = 'none';
-    });
-
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
@@ -176,14 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.log('SW error', err));
     }
 
-    // Hide loading screen
-    const loader = document.getElementById('loading-screen');
-    if (loader) {
-        setTimeout(() => {
-            loader.style.opacity = '0';
-            loader.style.visibility = 'hidden';
-        }, 3000);
-    }
+    // Initialize loading screen
+    triggerLoading(2000);
 
     setupFirebaseSync();
     if (currentMember) {
@@ -548,8 +582,11 @@ function showDashboard() {
     onDisconnect(memberPresenceRef).remove();
 
     if (authScreen) {
-        authScreen.style.display = 'none';
-        authScreen.classList.remove('auth-active');
+        authScreen.classList.add('hidden');
+        setTimeout(() => {
+            authScreen.style.display = 'none';
+            authScreen.classList.remove('auth-active');
+        }, 1000);
     }
     if (dashboard) {
         dashboard.style.display = 'flex';
@@ -665,21 +702,22 @@ function renderMyTasks() {
         
         let statusBadgeClass = task.status.toLowerCase();
         if (task.status === 'Completed') statusBadgeClass = 'pending'; // Submitted but pending review
+        if (task.status === 'Pending') statusBadgeClass = 'pending hollow';
 
         const rejectionNote = task.status === 'Rejected' ? 
             `<div style="color: var(--danger); font-size: 0.75rem; margin-top: 5px;">Reason: ${task.rejectionReason || 'N/A'}</div>` : '';
 
         tr.innerHTML = `
-            <td>
+            <td data-label="Task Title">
                 ${task.title}
                 ${rejectionNote}
             </td>
-            <td><span class="badge badge-${task.priority.toLowerCase()}">${task.priority}</span></td>
-            <td><span class="status-${statusBadgeClass}">${task.status === 'Completed' ? 'Reviewing' : task.status}</span></td>
-            <td>${task.date}</td>
-            <td>
+            <td data-label="Priority"><span class="badge badge-${task.priority.toLowerCase()}">${task.priority}</span></td>
+            <td data-label="Status"><span class="status-${statusBadgeClass}">${task.status === 'Completed' ? 'Reviewing' : task.status}</span></td>
+            <td data-label="Due Date">${task.date}</td>
+            <td data-label="Action">
                 ${task.status === 'Pending' || task.status === 'Rejected' ? 
-                    `<button class="btn-primary" onclick="window.location.hash='#submit-project'">Resubmit</button>` : 
+                    `<button class="btn-hollow" onclick="window.location.hash='#submit-project'">Resubmit</button>` : 
                     `<span style="color: var(--text-light); font-size: 0.875rem;">Locked</span>`}
             </td>
         `;
@@ -761,13 +799,16 @@ function setupNavigation() {
             const sectionId = link.getAttribute('data-section');
             if (!sectionId) return;
 
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            sections.forEach(s => {
-                s.classList.remove('active');
-                if (s.id === sectionId) s.classList.add('active');
+            // Trigger loading screen for section switch
+            triggerLoading(800, () => {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                sections.forEach(s => {
+                    s.classList.remove('active');
+                    if (s.id === sectionId) s.classList.add('active');
+                });
+                sectionTitle.textContent = link.querySelector('span').textContent;
             });
-            sectionTitle.textContent = link.querySelector('span').textContent;
 
             // Close sidebar on mobile after clicking
             if (window.innerWidth <= 768) {
